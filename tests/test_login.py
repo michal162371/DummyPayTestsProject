@@ -14,6 +14,7 @@ from playwright.sync_api import expect
 from pages import login_page
 from utilities.credentials import BASE_URL
 
+@pytest.mark.regression
 def test_login_with_valid_credentials(login_page):
     print(repr(VALID_USERNAME), repr(VALID_PASSWORD))
     login_page.open()
