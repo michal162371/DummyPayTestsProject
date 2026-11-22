@@ -1,0 +1,43 @@
+name: DummyPay Playwright Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Markers to execute'
+        type: choice
+        options:
+          - smoke
+          - regression
+        default: smoke
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+      - name: Install browser
+        run: python -m playwright install --with-deps chromium
+      - name: Run selected tests
+        env:
+          SUITE: ${{ github.event.inputs.suite || 'smoke' }}
+        run: |
+          if [ "$SUITE" = "regression" ]; then
+            pytest -m "smoke or regression" --browser chromium --tracing retain-on-failure --screenshot only-on-failure
+          else
+            pytest -m smoke --browser chromium --tracing retain-on-failure --screenshot only-on-failure
+          fi
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          if-no-files-found: ignore
